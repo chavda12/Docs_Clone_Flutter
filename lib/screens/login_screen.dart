@@ -2,12 +2,26 @@ import 'package:docs_clone_flutter/colors.dart';
 import 'package:docs_clone_flutter/repository/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:routemaster/routemaster.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
 
-  void signInWithGoggle(WidgetRef ref) {
-    ref.read(authRepositoryProvider).signInWithGoogle();
+  Future<void> signInWithGoggle(WidgetRef ref, BuildContext context) async {
+     final sMessenger = ScaffoldMessenger.of(context);
+     final navigator = Routemaster.of(context);
+    final errorModel =
+        await ref.read(authRepositoryProvider).signInWithGoogle();
+    if (errorModel.error == null) {
+      ref.read(userProvider.notifier).update((state) => errorModel.data);
+      navigator.replace('/');
+    } else {
+      sMessenger.showSnackBar(
+        SnackBar(
+          content: Text(errorModel.error!),
+        ),
+      );
+    }
   }
 
   @override
@@ -15,7 +29,7 @@ class LoginScreen extends ConsumerWidget {
     return Scaffold(
       body: Center(
         child: ElevatedButton.icon(
-          onPressed: () => signInWithGoggle(ref),
+          onPressed: () => signInWithGoggle(ref, context),
           icon: Image.asset(
             'assets/images/g-logo.png',
             height: 20,
